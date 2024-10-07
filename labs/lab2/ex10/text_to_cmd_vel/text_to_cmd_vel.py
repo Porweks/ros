@@ -12,57 +12,64 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#!/usr/bin/env python3
+
+#!/usr/bin/env python3
+
 import rclpy
 from rclpy.node import Node
-
 from geometry_msgs.msg import Twist
+from std_msgs.msg import String
 
-cmds = ['turn right', 'turn_left', 'move_forward', 'move_backward']
+# Константы для скорости
+LINEAR_SPEED = 1.0  # 1 метр в секунду
+ANGULAR_SPEED = 1.5  # 1.5 радиан в секунду
 
-class MinimalPublisher(Node):
-
+class TextToCmdVelNode(Node):
     def __init__(self):
         super().__init__('text_to_cmd_vel')
-        self.publisher_ = self.create_publisher(Twist, 'turtle1/cmd_vel', 10)
-        timer_period = 0.5  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_callback)
 
-    def timer_callback(self):
-        cmd = input()
-        if cmd in cmds:
-            msg = Twist()
-            if cmd == 'move_forward':
-                msg.linear.x = 1.5
-                self.get_logger().info('Get moved')
-            if cmd == 'move_backward':
-                msg.linear.x = -1.5
-                self.get_logger().info('Get moved')
-            if cmd == 'turn_right':
-                msg.angular.z = -1.5
-                self.get_logger().info('Get rotated')
-            if cmd == 'turn_left':
-                msg.angular.z = 1.5
-                self.get_logger().info('Get rotated')
+        self.cmd_vel_sub = self.create_subscription(String, 'cmd_text', self.text_command_callback, 5)  
 
-            self.publisher_.publish(msg)
+        self.cmd_vel_pub = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
+
+
+        self.commands = ["turn_right", "turn_left", "move_forward", "move_backward"]
+
+    def text_command_callback(self, msg):
+        """
+        Обработчик сообщений из топика cmd_text.
+        """
+        self.get_logger().info(f"Получена команда: {msg.data}")
+
+        twist_msg = Twist()
+
+        if msg.data == "turn_right":
+            twist_msg.angular.z = -ANGULAR_SPEED
+            self.get_logger().info("Поворот направо")
+        elif msg.data == "turn_left":
+            twist_msg.angular.z = ANGULAR_SPEED
+            self.get_logger().info("Поворот налево")
+        elif msg.data == "move_forward":
+            twist_msg.linear.x = LINEAR_SPEED
+            self.get_logger().info("Движение вперед")
+        elif msg.data == "move_backward":
+            twist_msg.linear.x = -LINEAR_SPEED
+            self.get_logger().info("Движение назад")
         else:
-            self.get_logger().info('Wrong command!')
-            
+            self.get_logger().warn(f"Неизвестная команда: {msg.data}")
+            return
 
+        # Публикация команды скорости
+        self.cmd_vel_pub.publish(twist_msg)
+        self.get_logger().info("Команда опубликована")
 
 def main(args=None):
     rclpy.init(args=args)
-
-    minimal_publisher = MinimalPublisher()
-
-    rclpy.spin(minimal_publisher)
-
-    # Destroy the node explicitly
-    # (optional - otherwise it will be done automatically
-    # when the garbage collector destroys the node object)
-    minimal_publisher.destroy_node()
+    node = TextToCmdVelNode()
+    rclpy.spin(node)
+    node.destroy_node()
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()

@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'text_to_cmd_vel'
+package_name = 'service_full_name'
 
 setup(
     name=package_name,
@@ -13,15 +13,15 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='Porweks',
-    maintainer_email='s.gubin@g.nsu.ru',
-    description='controller',
+    maintainer='porweks',
+    maintainer_email='porweks@todo.todo',
+    description='TODO: Package description',
     license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'text_to_cmd_vel = text_to_cmd_vel.text_to_cmd_vel:main',
-            'cmd_to_text = text_to_cmd_vel.cmd_to_text:main'
+            'name_service = service_full_name.service:main',
+            'name_client = service_full_name.client:main'
         ],
     },
 )
