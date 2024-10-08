@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
 from action_desc.action import MessageTurtleCommands
 import math
+import threading
 
 class TurtleActionServer(Node):
     def __init__(self):
@@ -61,11 +62,12 @@ class TurtleActionServer(Node):
 
     def rotate(self, angle, feedback_msg, goal_handle):
         twist = Twist()
-        twist.angular.z = math.radians(angle)
-
-        while self.calculate_angle() < abs(angle):
+        # print(self.calculate_angle() - angle, angle*2)
+        while self.calculate_angle() - angle > 0 and self.calculate_angle() - angle < abs(angle*2):
+            # print(self.calculate_angle() - angle)
+            twist.angular.z = (self.calculate_angle() - abs(angle))/10
             self.cmd_vel_pub.publish(twist)
-            rclpy.spin_once(self, timeout_sec=0.1)
+            rclpy.spin_once(self, timeout_sec=0.001)
             
         feedback_msg.odom = 0
 
@@ -74,18 +76,32 @@ class TurtleActionServer(Node):
         self.cmd_vel_pub.publish(twist)
 
     def calculate_distance(self):
-        # print(self.current_pose.x, self.current_pose.y)
         return math.sqrt((self.current_pose.x - self.initial_pose.x)**2 + (self.current_pose.y - self.initial_pose.y)**2)
 
     def calculate_angle(self):
-        # print(self.current_pose.theta)
         return abs(math.degrees(self.current_pose.theta - self.initial_pose.theta))
 
 def main(args=None):
     rclpy.init(args=args)
     turtle_action_server = TurtleActionServer()
-    rclpy.spin(turtle_action_server)
-    rclpy.shutdown()
+
+    executor = rclpy.executors.SingleThreadedExecutor()
+    executor.add_node(turtle_action_server)
+
+    # Запуск executor в отдельном потоке
+    executor_thread = threading.Thread(target=executor.spin)
+    executor_thread.start()
+
+    try:
+        while rclpy.ok():
+            rclpy.spin_once(turtle_action_server, timeout_sec=0.1)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        executor.shutdown()
+        turtle_action_server.destroy_node()
+        rclpy.shutdown()
+        executor_thread.join()
 
 if __name__ == '__main__':
     main()

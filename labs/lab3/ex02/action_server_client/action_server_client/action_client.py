@@ -4,25 +4,26 @@ from rclpy.node import Node
 from action_desc.action import MessageTurtleCommands
 
 class TurtleActionClient(Node):
+
     def __init__(self):
         super().__init__('turtle_action_client')
         self._action_client = ActionClient(self, MessageTurtleCommands, 'turtle_action')
         self._futures = []  # Список для хранения асинхронных вызовов
-        self.res = 0
-        self.count_goals = 0
+        self.goals = []
+        self.current_goal_index = 0
 
-    def send_goal(self, command, distance, angle):
+    def send_goal(self, command, s, angle):
         goal_msg = MessageTurtleCommands.Goal()
         goal_msg.command = command
-        goal_msg.s = distance
+        goal_msg.s = s
         goal_msg.angle = angle
 
-        self.get_logger().info(f"Action sent: {command}")
-
         self._action_client.wait_for_server()
-        send_goal_future = self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
-        send_goal_future.add_done_callback(self.goal_response_callback)
-        self._futures.append(send_goal_future)  # Добавляем асинхронный вызов в список
+        return self._action_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
+
+    def feedback_callback(self, feedback_msg):
+        feedback = feedback_msg.feedback
+        self.get_logger().info(f'Received feedback: {feedback.odom}')
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
@@ -32,39 +33,46 @@ class TurtleActionClient(Node):
 
         self.get_logger().info('Goal accepted :)')
 
-        get_result_future = goal_handle.get_result_async()
-        get_result_future.add_done_callback(self.get_result_callback)
-        self._futures.append(get_result_future)  # Добавляем асинхронный вызов в список
+        self._get_result_future = goal_handle.get_result_async()
+        self._get_result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future):
         result = future.result().result
-        self.get_logger().info('Result: {0}'.format(result.result))
-        # Если это последний результат, завершаем работу
-        if len(self._futures) == 0:
-            rclpy.shutdown()
+        status = future.result().status
+        if status == 4:
+            self.get_logger().info(f'Goal succeeded! Result: {result}')
+        else:
+            self.get_logger().info(f'Goal failed with status: {status}')
 
-    def feedback_callback(self, feedback_msg):
-        self.res+=feedback_msg.feedback.odom
-        self.count_goals+=1
-        self.get_logger().info(f'Received feedback: {self.res} meters')
+        # После завершения текущей цели, отправляем следующую
+        self.send_next_goal()
+
+    def send_next_goal(self):
+        if self.current_goal_index < len(self.goals):
+            goal = self.goals[self.current_goal_index]
+            self.current_goal_index += 1
+            future = self.send_goal(goal['command'], goal['s'], goal['angle'])
+            future.add_done_callback(self.goal_response_callback)
+        else:
+            self.get_logger().info('All goals completed')
+            rclpy.shutdown()
 
 def main(args=None):
     rclpy.init(args=args)
     action_client = TurtleActionClient()
 
-    goals = [
-        ("forward", 2, 0),
-        ("turn_right", 0, 90),
-        ("forward", 1, 0)
+    # Список целей для последовательного выполнения
+    action_client.goals = [
+        {'command': 'forward', 's': 2, 'angle': 0},
+        {'command': 'turn_right', 's': 0, 'angle': 45},  # 90 degrees in radians
+        {'command': 'forward', 's': 1, 'angle': 0},
     ]
+    action_client.current_goal_index = 0
 
-    for command, distance, angle in goals:
-        action_client.send_goal(command, distance, angle)
+    # Начинаем с первой цели
+    action_client.send_next_goal()
 
-    while rclpy.ok():
-        rclpy.spin_once(action_client)
-        if action_client.count_goals == len(goals):
-            break
+    rclpy.spin(action_client)
 
 if __name__ == '__main__':
     main()
