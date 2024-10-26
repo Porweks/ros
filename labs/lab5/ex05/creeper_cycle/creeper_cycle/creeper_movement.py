@@ -8,7 +8,7 @@ import math
 class MovementsNode(Node):
     def __init__(self):
         super().__init__('movements_node')
-        self.publisher_ = self.create_publisher(Twist, '/turtle1/cmd_vel', 10)
+        self.publisher_ = self.create_publisher(Twist, '/robot/cmd_vel', 10)
         timer_period = 0.1  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.angle_step =  2 * math.pi / 1.5  # Угол для каждого лепестка
