@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from std_msgs.msg import String
+import sys
 
 class TextToCmdVelNode(Node):
     def __init__(self):
@@ -12,6 +13,7 @@ class TextToCmdVelNode(Node):
         timer_period = .1  # seconds
 
         self.timer = self.create_timer(timer_period, self.publish_command)
+        self.flag = False
 
 
         self.commands = ["turn_right", "turn_left", "move_forward", "move_backward"]
@@ -20,7 +22,7 @@ class TextToCmdVelNode(Node):
         """
         Публикация команды в топик cmd_text.
         """
-        command = input()
+        command = sys.argv[1]
         if command in self.commands:
             msg = String()
             msg.data = command
@@ -28,11 +30,15 @@ class TextToCmdVelNode(Node):
             self.get_logger().info(f"Отправлена команда: {msg.data}")
         else:
             self.get_logger().warn(f"Неизвестная команда: {command}")
+        self.flag = True
 
 def main(args=None):
     rclpy.init(args=args)
     node = TextToCmdVelNode()
-    rclpy.spin(node)
+    while rclpy.ok():
+        rclpy.spin_once()
+        if node.flag == True:
+            break
     node.destroy_node()
     rclpy.shutdown()
 
