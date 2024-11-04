@@ -15,8 +15,8 @@ class TurtleTF2Listener(Node):
     def on_timer(self):
         try:
             trans = self.tf_buffer.lookup_transform('turtle2', 'carrot', rclpy.time.Time())
-        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-            self.get_logger().info('transform not found')
+        except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+            self.get_logger().info(f'transform not found: {e}')
             return
 
         msg = Twist()

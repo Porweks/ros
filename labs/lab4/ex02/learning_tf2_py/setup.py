@@ -27,6 +27,7 @@ setup(
             'turtle_tf2_broadcaster = learning_tf2_py.turtle_tf2_broadcaster:main',
             'carrot_tf2_broadcaster = learning_tf2_py.carrot_tf2_broadcaster:main',
             'turtle_tf2_listener = learning_tf2_py.turtle_tf2_listener:main',
+            'turtle2_tf2_broadcaster = learning_tf2_py.turtle2_tf2_broadcaster:main'
         ],
     },
 )

@@ -2,6 +2,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
 
 def generate_launch_description():
     return LaunchDescription([
@@ -17,6 +18,10 @@ def generate_launch_description():
             prefix='xterm -e',
             output='screen'
         ),
+        ExecuteProcess(
+            cmd=['ros2','service','call','/spawn','turtlesim/srv/Spawn', '{x: 2.0, y: 2.0, theta: 0.0, name: "turtle2"}'],
+            output='screen'
+        ),
         Node(
             package='learning_tf2_py',
             executable='turtle_tf2_broadcaster',
@@ -25,7 +30,7 @@ def generate_launch_description():
         ),
         Node(
             package='learning_tf2_py',
-            executable='turtle_tf2_broadcaster',
+            executable='turtle2_tf2_broadcaster',
             name='turtle2_tf2_broadcaster',
             parameters=[{'turtlename': 'turtle2'}]
         ),
