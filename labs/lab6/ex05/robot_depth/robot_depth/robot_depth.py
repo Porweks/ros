@@ -2,52 +2,54 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Image
 from rclpy.node import Node
 import rclpy
-import cv2
-from cv_bridge import CvBridge
-import numpy as np
+
+import sys
+import math
 import time
+class Happy(Node):
 
-class DepthCamera(Node):
+     def __init__(self):
+         # Creates a node with name 'turtlebot_controller' and make sure it is a
+         # unique node (using anonymous=True).
+         super().__init__('happy')
 
-    def __init__(self):
-        super().__init__('depth_camera')
+         # Publisher which will publish to the topic '/turtle1/cmd_vel'.
+         self.velocity_publisher = self.create_publisher(Twist, '/robot/cmd_vel', 10)
+         self.pose_subscriber = self.create_subscription(Image, '/depth/image', self.update_pose, 10)
+         self.scan = Image()
+         self.timer = self.create_timer(0.5, self.move)
 
-        # Publisher which will publish to the topic '/robot/cmd_vel'.
-        self.velocity_publisher = self.create_publisher(Twist, '/robot/cmd_vel', 10)
-        self.depth_subscriber = self.create_subscription(Image, '/robot/depth_image', self.update_depth, 10)
-        self.depth_image = None
-        self.timer = self.create_timer(0.5, self.move)
-        self.bridge = CvBridge()
+     def update_pose(self, data):
+         self.scan = data
 
-    def update_depth(self, msg):
-        self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="passthrough")
-
-    def move(self):
-        vel_msg = Twist()
-        if self.depth_image is not None:
-            # Вычисляем среднюю глубину в центральной области изображения
-            height, width = self.depth_image.shape
-            center_x = width // 2
-            center_y = height // 2
-            roi_size = 50  # Размер области интереса (ROI)
-            roi = self.depth_image[center_y - roi_size:center_y + roi_size, center_x - roi_size:center_x + roi_size]
-            avg_depth = np.mean(roi)
-
-            if avg_depth < 0.41:  # Если средняя глубина меньше 0.41 метра
-                vel_msg.linear.x = 0.0
-            else:
+     def move(self):
+         """Moves the turtle to the goal."""
+         
+         vel_msg = Twist()
+         d = self.scan.data
+         vel_msg.linear.x = 0.
+         if (len(d)!=0):
+            tmp = int(d[int(self.scan.width*self.scan.height/2 + self.scan.width/2)])
+         #self.get_logger().info('%d" ' % laser)
+            if (tmp==0.0 or tmp == 127 or tmp == 128):
                 vel_msg.linear.x = 0.3
+            else:
+                vel_msg.linear.x = 0.0
+         vel_msg.angular.z = 0.0
+         self.velocity_publisher.publish(vel_msg)
 
-        vel_msg.angular.z = 0.0
-        self.velocity_publisher.publish(vel_msg)
-
+         
+ 
+         
 def main(args=None):
     rclpy.init(args=args)
+    #give time to place an obstacle 
     time.sleep(2)
-    x = DepthCamera()
+    x = Happy()
     rclpy.spin(x)
     x.destroy_node()
     rclpy.shutdown()
 
+ 
 if __name__ == '__main__':
     main()
