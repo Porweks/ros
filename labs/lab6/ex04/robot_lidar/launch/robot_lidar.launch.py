@@ -46,7 +46,7 @@ def generate_launch_description():
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_ros_gz_sim, 'launch', 'gz_sim.launch.py')),
-        launch_arguments={'gz_args': "-r gpu_lidar_sensor.sdf"}.items(),
+        launch_arguments={'gz_args': "-r empty.sdf"}.items(),
     )
 
     # Spawn robot
@@ -87,10 +87,18 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         parameters=[{
-            'config_file': os.path.join(pkg_project_bringup, 'config', 'robot_bridge.yaml'),
+            'config_file': os.path.join(pkg_project_bringup, 'config', 'robot_bridge_lidar.yaml'),
             'qos_overrides./tf_static.publisher.durability': 'transient_local',
         }],
         output='screen'
+    )
+
+    move = Node(
+        package='robot_depth',
+        executable='robot_depth',
+        name='robot_depth',
+        parameters=[
+        ]
     )
 
     return LaunchDescription([
@@ -100,6 +108,7 @@ def generate_launch_description():
         bridge,
         robot_state_publisher,
         rviz,
+        move,
         TimerAction(
             period=5.0,
             actions=[create])
