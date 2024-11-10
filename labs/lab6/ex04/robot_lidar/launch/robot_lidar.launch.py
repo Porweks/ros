@@ -94,9 +94,9 @@ def generate_launch_description():
     )
 
     move = Node(
-        package='robot_depth',
-        executable='robot_depth',
-        name='robot_depth',
+        package='robot_lidar',
+        executable='robot_lidar',
+        name='robot_lidar',
         parameters=[
         ]
     )
