@@ -35,27 +35,27 @@
     gz_type_name: "gz.msgs.Model"
     direction: GZ_TO_ROS
     ros_topic_name: "/depth/camera_info"
-    gz_topic_name: "/world/empty/model/robot/link/base_link/sensor/depth_sensor_frame/camera_info"
+    gz_topic_name: "/world/gpu_lidar_sensor/model/robot/link/base_link/sensor/depth_sensor_frame/camera_info"
     ros_type_name: "sensor_msgs/msg/CameraInfo"
     gz_type_name: "gz.msgs.CameraInfo"
     direction: GZ_TO_ROS
   - ros_topic_name: "/depth/image"
-    gz_topic_name: "/world/empty/model/robot/link/base_link/sensor/depth_sensor_frame/depth_image"
+    gz_topic_name: "/world/gpu_lidar_sensor/model/robot/link/base_link/sensor/depth_sensor_frame/depth_image"
     ros_type_name: "sensor_msgs/msg/Image"
     gz_type_name: "gz.msgs.Image"
     direction: GZ_TO_ROS
   - ros_topic_name: "/depth/points"
-    gz_topic_name: "/world/empty/model/robot/link/base_link/sensor/depth_sensor_frame/depth_image/points"
+    gz_topic_name: "/world/gpu_lidar_sensor/model/robot/link/base_link/sensor/depth_sensor_frame/depth_image/points"
     ros_type_name: "sensor_msgs/msg/PointCloud2"
     gz_type_name: "gz.msgs.PointCloudPacked"
     direction: GZ_TO_ROS
   - ros_topic_name: "/color/camera_info"
-    gz_topic_name: "/world/empty/model/robot/link/base_link/sensor/color_sensor_frame/camera_info"
+    gz_topic_name: "/world/gpu_lidar_sensor/model/robot/link/base_link/sensor/color_sensor_frame/camera_info"
     ros_type_name: "sensor_msgs/msg/CameraInfo"
     gz_type_name: "gz.msgs.CameraInfo"
     direction: GZ_TO_ROS
   - ros_topic_name: "/color/image"
-    gz_topic_name: "/world/empty/model/robot/link/base_link/sensor/color_sensor_frame/image"
+    gz_topic_name: "/world/gpu_lidar_sensor/model/robot/link/base_link/sensor/color_sensor_frame/image"
     ros_type_name: "sensor_msgs/msg/Image"
     gz_type_name: "gz.msgs.Image"
     direction: GZ_TO_ROS
